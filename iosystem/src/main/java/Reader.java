@@ -20,10 +20,8 @@ import java.util.Set;
  */
 public class Reader {
 
-    private static final double OVERLAPPING = 0.05;
-
-    double Y_MIN = 10000;
-    double Y_MAX = -10000;
+    private double Y_MIN = 10000;
+    private double Y_MAX = -10000;
 
     public TriangulatedMesh readMeshFromJson(String filePath) {
 
@@ -63,8 +61,8 @@ public class Reader {
     public List<TriangulatedMesh> readMeshFromJsonSeparatedBy2(String filePath) {
         TriangulatedMesh mesh = readMeshFromJson(filePath);
 
-        double thresholdLower = (Y_MAX - Y_MIN) * (0.5 - OVERLAPPING);
-        double thresholdUpper = (Y_MAX - Y_MIN) * (0.5 + OVERLAPPING);
+        double thresholdLower = (Y_MAX - Y_MIN) * (0.5 - Constants.OVERLAPPING);
+        double thresholdUpper = (Y_MAX - Y_MIN) * (0.5 + Constants.OVERLAPPING);
 
         return Arrays.asList(getPartialMesh(mesh, thresholdLower, true),
                 getPartialMesh(mesh, thresholdUpper, false));

@@ -7,7 +7,7 @@ import java.util.Locale;
  * Created by Anton Klimansky on 02.03.2017.
  */
 public class Writer {
-    public static final String HEADER_FORMAT = "ply\n" +
+    private static final String HEADER_FORMAT = "ply\n" +
             "format ascii 1.0\n" +
             "element vertex %d\n" +
             "property float x\n" +
