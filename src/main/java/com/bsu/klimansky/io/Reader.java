@@ -1,3 +1,8 @@
+package com.bsu.klimansky.io;
+
+import com.bsu.klimansky.Constants;
+import com.bsu.klimansky.model.Triangle;
+import com.bsu.klimansky.model.TriangulatedMesh;
 import javafx.geometry.Point3D;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -10,10 +15,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Anton Klimansky on 02.03.2017.

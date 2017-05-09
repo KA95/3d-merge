@@ -1,3 +1,5 @@
+package com.bsu.klimansky.model;
+
 /**
  * Created by Anton Klimansky on 02.03.2017.
  */

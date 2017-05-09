@@ -1,3 +1,9 @@
+package com.bsu.klimansky;
+
+import com.bsu.klimansky.io.Reader;
+import com.bsu.klimansky.io.Writer;
+import com.bsu.klimansky.model.TriangulatedMesh;
+
 import java.io.IOException;
 import java.util.List;
 

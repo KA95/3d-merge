@@ -1,3 +1,7 @@
+package com.bsu.klimansky.io;
+
+import com.bsu.klimansky.model.Triangle;
+import com.bsu.klimansky.model.TriangulatedMesh;
 import javafx.geometry.Point3D;
 
 import java.io.*;

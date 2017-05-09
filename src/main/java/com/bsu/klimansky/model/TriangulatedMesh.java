@@ -1,3 +1,5 @@
+package com.bsu.klimansky.model;
+
 import javafx.geometry.Point3D;
 
 import java.util.List;
