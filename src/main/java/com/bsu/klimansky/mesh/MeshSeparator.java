@@ -35,8 +35,13 @@ public class MeshSeparator {
         double thresholdLower = (reader.yMax - reader.yMin) * (0.5 - Constants.OVERLAPPING);
         double thresholdUpper = (reader.yMax - reader.yMin) * (0.5 + Constants.OVERLAPPING);
 
-        return Arrays.asList(getPartialMesh(mesh, thresholdLower, true),
-                getPartialMesh(mesh, thresholdUpper, false));
+        TriangulatedMesh upper = getPartialMesh(mesh, thresholdLower, true);
+        upper.moveVerticallyTo(reader.yMin);
+        upper.rotate(Math.PI / 2);
+
+        TriangulatedMesh lower = getPartialMesh(mesh, thresholdUpper, false);
+
+        return Arrays.asList(upper, lower);
     }
 
     private static TriangulatedMesh getPartialMesh(TriangulatedMesh source, double yThreshold, boolean above) {
@@ -47,14 +52,14 @@ public class MeshSeparator {
         int counter = 0;
         for (int i = 0; i < points.size(); i++) {
             Point3D point = points.get(i);
-            if(above) {
-                if(point.getY() > yThreshold) {
+            if (above) {
+                if (point.getY() > yThreshold) {
                     newPoints.add(point);
                     allowedVertices.put(i, counter);
                     counter++;
                 }
             } else {
-                if(point.getY() < yThreshold) {
+                if (point.getY() < yThreshold) {
                     newPoints.add(point);
                     allowedVertices.put(i, counter);
                     counter++;
@@ -64,11 +69,11 @@ public class MeshSeparator {
 
         List<Triangle> triangles = source.triangles;
         List<Triangle> newTriangles = new ArrayList<>();
-        for(Triangle t : triangles) {
+        for (Triangle t : triangles) {
             int p1 = t.getP1();
             int p2 = t.getP2();
             int p3 = t.getP3();
-            if(allowedVertices.containsKey(p1)) {
+            if (allowedVertices.containsKey(p1)) {
                 if (allowedVertices.containsKey(p2)) {
                     if (allowedVertices.containsKey(p3)) {
                         Triangle triangle = new Triangle(
