@@ -1,6 +1,5 @@
 package com.bsu.klimansky.io;
 
-import com.bsu.klimansky.Constants;
 import com.bsu.klimansky.model.Triangle;
 import com.bsu.klimansky.model.TriangulatedMesh;
 import javafx.geometry.Point3D;
@@ -9,22 +8,18 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Anton Klimansky on 02.03.2017.
  */
 public class Reader {
 
-    private double Y_MIN = 10000;
-    private double Y_MAX = -10000;
+    public double yMin = 10000;
+    public double yMax = -10000;
 
     public TriangulatedMesh readMeshFromJson(String filePath) {
 
@@ -48,76 +43,13 @@ public class Reader {
             JSONObject connectivity = (JSONObject) ((JSONArray) jsonObject.get("connectivity")).get(0);
             JSONArray indices = (JSONArray) connectivity.get("indices");
             triangles = getTriangles(indices);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
         TriangulatedMesh mesh = new TriangulatedMesh();
         mesh.points = points;
         mesh.triangles = triangles;
         return mesh;
-    }
-
-    public List<TriangulatedMesh> readMeshFromJsonSeparatedBy2(String filePath) {
-        TriangulatedMesh mesh = readMeshFromJson(filePath);
-
-        double thresholdLower = (Y_MAX - Y_MIN) * (0.5 - Constants.OVERLAPPING);
-        double thresholdUpper = (Y_MAX - Y_MIN) * (0.5 + Constants.OVERLAPPING);
-
-        return Arrays.asList(getPartialMesh(mesh, thresholdLower, true),
-                getPartialMesh(mesh, thresholdUpper, false));
-    }
-
-    TriangulatedMesh getPartialMesh(TriangulatedMesh source, double yThreshold, boolean above) {
-        Map<Integer, Integer> allowedVertices = new HashMap<>();
-
-        List<Point3D> points = source.points;
-        List<Point3D> newPoints = new ArrayList<>();
-        int counter = 0;
-        for (int i = 0; i < points.size(); i++) {
-            Point3D point = points.get(i);
-            if(above) {
-                if(point.getY() > yThreshold) {
-                    newPoints.add(point);
-                    allowedVertices.put(i, counter);
-                    counter++;
-                }
-            } else {
-                if(point.getY() < yThreshold) {
-                    newPoints.add(point);
-                    allowedVertices.put(i, counter);
-                    counter++;
-                }
-            }
-        }
-
-        List<Triangle> triangles = source.triangles;
-        List<Triangle> newTriangles = new ArrayList<>();
-        for(Triangle t : triangles) {
-            int p1 = t.getP1();
-            int p2 = t.getP2();
-            int p3 = t.getP3();
-            if(allowedVertices.containsKey(p1)) {
-                if (allowedVertices.containsKey(p2)) {
-                    if (allowedVertices.containsKey(p3)) {
-                        Triangle triangle = new Triangle(
-                                allowedVertices.get(p1),
-                                allowedVertices.get(p2),
-                                allowedVertices.get(p3)
-                        );
-                        newTriangles.add(triangle);
-                    }
-                }
-            }
-        }
-
-        TriangulatedMesh result = new TriangulatedMesh();
-        result.points = newPoints;
-        result.triangles = newTriangles;
-        return result;
     }
 
     private List<Point3D> getPoints(JSONArray vertices) {
@@ -133,8 +65,8 @@ public class Reader {
             double x = Double.parseDouble(xObj.toString());
             double y = Double.parseDouble(yObj.toString());
             double z = Double.parseDouble(zObj.toString());
-            Y_MIN = Math.min(Y_MIN, y);
-            Y_MAX = Math.max(Y_MAX, y);
+            yMin = Math.min(yMin, y);
+            yMax = Math.max(yMax, y);
             points.add(new Point3D(x, y, z));
         }
         return points;

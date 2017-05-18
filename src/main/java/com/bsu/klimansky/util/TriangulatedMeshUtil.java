@@ -65,7 +65,6 @@ public class TriangulatedMeshUtil {
     public static TriangulatedMesh join(TriangulatedMesh lower, TriangulatedMesh upper, List<Integer> lBound, List<Integer> uBound) {
 
         //merging existing parts
-
         TriangulatedMesh mesh = new TriangulatedMesh();
         int shift = lower.points.size();
 
@@ -112,16 +111,17 @@ public class TriangulatedMeshUtil {
         //merging
         int l = 0;
         int u = 0;
+        List<Triangle> triangles = new ArrayList<>();
         while (l < lBound.size() || u < uBound.size()) {
             if (l == lBound.size()) {
                 Triangle t = new Triangle(take(uBound, u) + shift, take(lBound, l), take(uBound, u + 1) + shift);
-                mesh.triangles.add(t);
+                triangles.add(t);
                 u++;
                 continue;
             }
             if (u == uBound.size()) {
                 Triangle t = new Triangle(take(lBound, l), take(uBound, u) + shift, take(lBound, l + 1));
-                mesh.triangles.add(t);
+                triangles.add(t);
                 l++;
                 continue;
             }
@@ -133,14 +133,16 @@ public class TriangulatedMeshUtil {
             boolean takeLower = up.distance(lNext) < lp.distance(uNext);
             if (takeLower) {
                 Triangle t = new Triangle(take(lBound, l), take(uBound, u) + shift, take(lBound, l + 1));
-                mesh.triangles.add(t);
+                triangles.add(t);
                 l++;
             } else {
                 Triangle t = new Triangle(take(uBound, u) + shift, take(lBound, l), take(uBound, u + 1) + shift);
-                mesh.triangles.add(t);
+                triangles.add(t);
                 u++;
             }
         }
+
+        mesh.triangles.addAll(triangles);
 
         return mesh;
     }
