@@ -1,5 +1,6 @@
 package com.bsu.klimansky.util;
 
+import com.bsu.klimansky.model.AdvancedTriangulatedMesh;
 import com.bsu.klimansky.model.Triangle;
 import com.bsu.klimansky.model.TriangulatedMesh;
 import javafx.geometry.Point3D;
@@ -62,7 +63,7 @@ public class TriangulatedMeshUtil {
         return buildBound(graph, points, pFirstIndex, upper);
     }
 
-    public static TriangulatedMesh join(TriangulatedMesh lower, TriangulatedMesh upper, List<Integer> lBound, List<Integer> uBound) {
+    public static TriangulatedMesh join(AdvancedTriangulatedMesh lower, AdvancedTriangulatedMesh upper) {
 
         //merging existing parts
         TriangulatedMesh mesh = new TriangulatedMesh();
@@ -85,9 +86,9 @@ public class TriangulatedMeshUtil {
         double bestDist = 10000000;
         int bestP1 = -1;
         int bestP2 = -1;
-        for (int p1 : lBound) {
+        for (int p1 : lower.bound) {
             Point3D point1 = lower.points.get(p1);
-            for (int p2 : uBound) {
+            for (int p2 : upper.bound) {
                 Point3D point2 = upper.points.get(p2);
                 double d = point1.distance(point2);
                 if (d < bestDist) {
@@ -98,13 +99,13 @@ public class TriangulatedMeshUtil {
             }
         }
         //hack!!
-//        Collections.reverse(lBound);
+//        Collections.reverse(lower.bound);
         //shift to them
-        int lStart = lBound.indexOf(bestP1);
-        int uStart = uBound.indexOf(bestP2);
+        int lStart = lower.bound.indexOf(bestP1);
+        int uStart = upper.bound.indexOf(bestP2);
 
-        Collections.rotate(uBound, -uStart);
-        Collections.rotate(lBound, -lStart);
+        Collections.rotate(upper.bound, -uStart);
+        Collections.rotate(lower.bound, -lStart);
 
         //todo: check directions
 
@@ -112,38 +113,38 @@ public class TriangulatedMeshUtil {
         int l = 0;
         int u = 0;
         List<Triangle> triangles = new ArrayList<>();
-        while (l < lBound.size() || u < uBound.size()) {
-            if (l == lBound.size()) {
-                Triangle t = new Triangle(take(uBound, u) + shift, take(lBound, l), take(uBound, u + 1) + shift);
+        while (l < lower.bound.size() || u < upper.bound.size()) {
+            if (l == lower.bound.size()) {
+                Triangle t = new Triangle(take(upper.bound, u) + shift, take(lower.bound, l), take(upper.bound, u + 1) + shift);
                 triangles.add(t);
                 u++;
                 continue;
             }
-            if (u == uBound.size()) {
-                Triangle t = new Triangle(take(lBound, l), take(uBound, u) + shift, take(lBound, l + 1));
+            if (u == upper.bound.size()) {
+                Triangle t = new Triangle(take(lower.bound, l), take(upper.bound, u) + shift, take(lower.bound, l + 1));
                 triangles.add(t);
                 l++;
                 continue;
             }
-            Point3D lp = lower.points.get(take(lBound, l));
-            Point3D up = upper.points.get(take(uBound, u));
-            Point3D lNext = lower.points.get(take(lBound, l + 1));
-            Point3D uNext = upper.points.get(take(uBound, u + 1));
+            Point3D lp = lower.points.get(take(lower.bound, l));
+            Point3D up = upper.points.get(take(upper.bound, u));
+            Point3D lNext = lower.points.get(take(lower.bound, l + 1));
+            Point3D uNext = upper.points.get(take(upper.bound, u + 1));
 
             boolean takeLower = up.distance(lNext) < lp.distance(uNext);
             if (takeLower) {
-                Triangle t = new Triangle(take(lBound, l), take(uBound, u) + shift, take(lBound, l + 1));
+                Triangle t = new Triangle(take(lower.bound, l), take(upper.bound, u) + shift, take(lower.bound, l + 1));
                 triangles.add(t);
                 l++;
             } else {
-                Triangle t = new Triangle(take(uBound, u) + shift, take(lBound, l), take(uBound, u + 1) + shift);
+                Triangle t = new Triangle(take(upper.bound, u) + shift, take(lower.bound, l), take(upper.bound, u + 1) + shift);
                 triangles.add(t);
                 u++;
             }
         }
 
         mesh.triangles.addAll(triangles);
-
+        System.out.println(triangles.size());
         return mesh;
     }
 
