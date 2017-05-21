@@ -1,5 +1,6 @@
 package com.bsu.klimansky.model;
 
+import com.bsu.klimansky.util.TriangulatedMeshUtil;
 import javafx.geometry.Point3D;
 
 import java.util.ArrayList;
@@ -34,5 +35,23 @@ public class TriangulatedMesh {
             newPoints.add(new Point3D(c * x - s * z, y, s * x + c * z));
         }
         points = newPoints;
+    }
+
+    public void move(Point3D translation) {
+        List<Point3D> newPoints = new ArrayList<>();
+        for (Point3D point3D : points) {
+            newPoints.add(point3D.add(translation));
+        }
+        points = newPoints;
+    }
+
+    public void rotate(double angle, Point3D around) {
+        move(around.subtract(around).subtract(around));
+        rotate(angle);
+        move(around);
+    }
+
+    public TriangulatedMesh getTruncated(double separatorY, boolean upper) {
+        return TriangulatedMeshUtil.getPartialMesh(this, separatorY, upper);
     }
 }

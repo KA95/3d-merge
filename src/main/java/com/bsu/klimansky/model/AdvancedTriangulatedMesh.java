@@ -12,31 +12,39 @@ import static com.bsu.klimansky.util.TriangulatedMeshUtil.boundForMesh;
  */
 public class AdvancedTriangulatedMesh extends TriangulatedMesh {
 
-    public static int counter = 0;
+
+    public boolean upper;
+    public List<Integer> bound;
+
     private double yMin;
     private double yMax;
+
+    public Map<Integer, List<Integer>> downToUp;
+    public Map<Integer, List<Integer>> upToDown;
 
     private double cutAreaTop;
     private double cutAreaBottom;
     private double step;
 
-    public boolean upper;
-    public List<Integer> bound;
-    public List<MeshCut> cuts;
-
-    public Map<Integer, List<Integer>> downToUp;
-    public Map<Integer, List<Integer>> upToDown;
 
     public List<Integer> pointsByHeightAsc;
 
-    public AdvancedTriangulatedMesh(TriangulatedMesh mesh, boolean upper) {
+    public List<MeshCut> cuts;
+
+    /**
+     * Structure storing all triangles in form a->b->c where a<b<c
+     **/
+    public Map<Integer, Map<Integer, List<Integer>>> pointsOfTriangles = new HashMap<>();
+
+    public AdvancedTriangulatedMesh(TriangulatedMesh mesh, boolean upper) throws Exception {
         this.upper = upper;
         triangles = mesh.triangles;
         points = mesh.points;
         bound = boundForMesh(mesh, upper);
         bound.remove(bound.size() - 1);
+    }
 
-        //upper specific
+    public void recalculate() throws Exception {
         yMin = points.get(0).getY();
         yMax = yMin;
 
@@ -48,13 +56,14 @@ public class AdvancedTriangulatedMesh extends TriangulatedMesh {
         boolean[][] used = new boolean[points.size()][points.size()];
 
 
-        //Initialize edges
+        //Initialize cutEdges
         upToDown = new HashMap<>();
         downToUp = new HashMap<>();
         for (Triangle tr : triangles) {
             addEdge(tr.getP1(), tr.getP2(), used);
             addEdge(tr.getP2(), tr.getP3(), used);
             addEdge(tr.getP1(), tr.getP3(), used);
+            putTriangleToMap(tr);
         }
 
         //Sort points
@@ -65,17 +74,50 @@ public class AdvancedTriangulatedMesh extends TriangulatedMesh {
         pointsByHeightAsc.sort((p1, p2) -> (int) Math.signum(points.get(p1).getY() - points.get(p2).getY()));
 
         //Build cuts
-        cutAreaTop = (yMax + yMin) / 2;
-        cutAreaBottom = yMin;
-        for (int i : bound) {
-            cutAreaBottom = Math.max(cutAreaBottom, points.get(i).getY());
+        if (upper) {
+            cutAreaTop = (yMax + yMin) / 2;
+            cutAreaBottom = yMin;
+            for (int i : bound) {
+                //highest point of lower bound
+                cutAreaBottom = Math.max(cutAreaBottom, points.get(i).getY());
+            }
+        } else {
+            cutAreaTop = yMax;
+//                cutAreaBottom = (yMax + yMin) / 2;
+            cutAreaBottom = yMin;
+            for (int i : bound) {
+                //lowest point of higher bound
+                cutAreaTop = Math.min(cutAreaTop, points.get(i).getY());
+            }
         }
+
         step = (cutAreaTop - cutAreaBottom) / Constants.FREQUENCY;
         cuts = new ArrayList<>();
         for (int i = 0; i <= Constants.FREQUENCY; i++) {
             cuts.add(new MeshCut(cutAreaBottom + i * step, this));
         }
 
+    }
+
+    private void putTriangleToMap(Triangle tr) {
+        List<Integer> list = new ArrayList<>(Arrays.asList(tr.getP1(), tr.getP2(), tr.getP3()));
+        list.sort(Comparator.comparingInt(o -> o));
+        int p1 = list.get(0);
+        int p2 = list.get(1);
+        int p3 = list.get(2);
+        if (pointsOfTriangles.containsKey(p1)) {
+            if (pointsOfTriangles.get(p1).containsKey(p2)) {
+                pointsOfTriangles.get(p1).get(p2).add(p3);
+            } else {
+                ArrayList<Integer> lp3 = new ArrayList<>(Collections.singletonList(p3));
+                pointsOfTriangles.get(p1).put(p2, lp3);
+            }
+        } else {
+            ArrayList<Integer> lp3 = new ArrayList<>(Collections.singletonList(p3));
+            Map<Integer, List<Integer>> p2p3 = new HashMap<>();
+            p2p3.put(p2, lp3);
+            pointsOfTriangles.put(p1, p2p3);
+        }
     }
 
     private void addEdge(int p1, int p2, boolean[][] used) {
@@ -95,7 +137,6 @@ public class AdvancedTriangulatedMesh extends TriangulatedMesh {
 
         add(upper, lower, upToDown);
         add(lower, upper, downToUp);
-        System.out.println(counter++);
     }
 
     private void add(int from, int to, Map<Integer, List<Integer>> edgesMap) {

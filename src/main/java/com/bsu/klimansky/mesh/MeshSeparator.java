@@ -10,6 +10,8 @@ import javafx.geometry.Point3D;
 import java.io.IOException;
 import java.util.*;
 
+import static com.bsu.klimansky.util.TriangulatedMeshUtil.getPartialMesh;
+
 
 /**
  * Created by Anton Klimansky on 26.02.2017.
@@ -42,55 +44,6 @@ public class MeshSeparator {
         TriangulatedMesh lower = getPartialMesh(mesh, thresholdUpper, false);
 
         return Arrays.asList(upper, lower);
-    }
-
-    private static TriangulatedMesh getPartialMesh(TriangulatedMesh source, double yThreshold, boolean above) {
-        Map<Integer, Integer> allowedVertices = new HashMap<>();
-
-        List<Point3D> points = source.points;
-        List<Point3D> newPoints = new ArrayList<>();
-        int counter = 0;
-        for (int i = 0; i < points.size(); i++) {
-            Point3D point = points.get(i);
-            if (above) {
-                if (point.getY() > yThreshold) {
-                    newPoints.add(point);
-                    allowedVertices.put(i, counter);
-                    counter++;
-                }
-            } else {
-                if (point.getY() < yThreshold) {
-                    newPoints.add(point);
-                    allowedVertices.put(i, counter);
-                    counter++;
-                }
-            }
-        }
-
-        List<Triangle> triangles = source.triangles;
-        List<Triangle> newTriangles = new ArrayList<>();
-        for (Triangle t : triangles) {
-            int p1 = t.getP1();
-            int p2 = t.getP2();
-            int p3 = t.getP3();
-            if (allowedVertices.containsKey(p1)) {
-                if (allowedVertices.containsKey(p2)) {
-                    if (allowedVertices.containsKey(p3)) {
-                        Triangle triangle = new Triangle(
-                                allowedVertices.get(p1),
-                                allowedVertices.get(p2),
-                                allowedVertices.get(p3)
-                        );
-                        newTriangles.add(triangle);
-                    }
-                }
-            }
-        }
-
-        TriangulatedMesh result = new TriangulatedMesh();
-        result.points = newPoints;
-        result.triangles = newTriangles;
-        return result;
     }
 
 
