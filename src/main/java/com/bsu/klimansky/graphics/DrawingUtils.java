@@ -32,7 +32,7 @@ public class DrawingUtils {
     public static void drawEdgesUsedInCut(TriangulatedMesh mesh, MeshCut cut, TestAnalysis ta) {
         List<Polygon> lp = new ArrayList<>();
         for (Edge e : cut.cutEdges) {
-            lp.add(createTriangle(Color.BLACK, mesh.points.get(e.p1), mesh.points.get(e.p2), mesh.points.get(e.p2), Color.BLACK));
+            lp.add(createTriangle(Color.BLACK, mesh.points.get(e.p1), mesh.points.get(e.p2), mesh.points.get(e.p2), Color.GRAY));
         }
         ta.draw(new Shape(lp));
     }
@@ -76,14 +76,14 @@ public class DrawingUtils {
 
         Coord3d[] coord3ds = new Coord3d[newPoints.size()];
         newPoints.toArray(coord3ds);
-        Scatter pointsScatter = new Scatter(coord3ds, Color.BLUE, 2f);
+        Scatter pointsScatter = new Scatter(coord3ds, Color.BLUE, 3f);
         ta.draw(pointsScatter);
     }
 
     public static void drawCutEdges(MeshCut cut, TestAnalysis ta) {
         List<Polygon> lp = new ArrayList<>();
         for (Edge e : cut.edges) {
-            lp.add(createTriangle(Color.BLACK, cut.cutPoints.get(e.p1), cut.cutPoints.get(e.p2), cut.cutPoints.get(e.p2), Color.BLACK));
+            lp.add(createTriangle(Color.BLACK, cut.cutPoints.get(e.p1), cut.cutPoints.get(e.p2), cut.cutPoints.get(e.p2), Color.GRAY));
         }
         ta.draw(new Shape(lp));
     }
