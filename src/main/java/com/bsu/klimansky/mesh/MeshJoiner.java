@@ -29,7 +29,6 @@ public class MeshJoiner {
         TriangulatedMesh lower = reader.readMeshFromJson(PATH_TO_LOWER_PART);
         TriangulatedMesh upper = reader.readMeshFromJson(PATH_TO_UPPER_PART);
 
-
         AdvancedTriangulatedMesh aUpper = new AdvancedTriangulatedMesh(upper, true);
         AdvancedTriangulatedMesh aLower = new AdvancedTriangulatedMesh(lower, false);
 
@@ -37,15 +36,9 @@ public class MeshJoiner {
 
         TestAnalysis ta = new TestAnalysis();
         AnalysisLauncher.open(ta);
-        ta.draw(createTriangle(Color.BLACK, new Point3D(0,0,0), new Point3D(0,0,0), new Point3D(0,0.0,0), Color.BLACK));
-        System.out.println(Constants.ADDED_TRIANGLES);
-        drawMesh(result, ta, Constants.ADDED_TRIANGLES);
-        for(int i = result.triangles.size() - Constants.ADDED_TRIANGLES; i < result.triangles.size(); i++) {
-            drawTriangle(result.triangles.get(i), result, ta);
-        }
+        ta.draw(createTriangle(Color.BLACK, new Point3D(0, 0, 0), new Point3D(0, 0, 0), new Point3D(0, 0.0, 0), Color.BLACK));
 
-        Writer writer = new Writer();
-        writer.write(result, PATH_TO_OUT);
+        drawMesh(result, ta, 0);
 
         System.out.println("Done");
 

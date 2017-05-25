@@ -13,8 +13,8 @@ import java.util.Set;
  */
 class GraphUtil {
 
-    static Map<Integer, Set<Integer>> buildGraphByMesh(TriangulatedMesh mesh) {
-        Map<Integer, Set<Integer>> graph = new HashMap<>();
+    static Map<Integer, Map<Integer, Integer>> calculateBoundEdges(TriangulatedMesh mesh) {
+        Map<Integer, Map<Integer, Integer>> graph = new HashMap<>();
         for (Triangle t : mesh.triangles) {
             addEdge(graph, t.getP1(), t.getP2());
             addEdge(graph, t.getP2(), t.getP3());
@@ -23,18 +23,23 @@ class GraphUtil {
         return graph;
     }
 
-    private static void addEdge(Map<Integer, Set<Integer>> graph, int v1, int v2) {
+    private static void addEdge(Map<Integer, Map<Integer, Integer>> graph, int v1, int v2) {
         addEdgeInternal(graph, v1, v2);
         addEdgeInternal(graph, v2, v1);
     }
 
-    private static void addEdgeInternal(Map<Integer, Set<Integer>> graph, int v1, int v2) {
+    private static void addEdgeInternal(Map<Integer, Map<Integer, Integer>> graph, int v1, int v2) {
         if (graph.containsKey(v1)) {
-            graph.get(v1).add(v2);
+            if (graph.get(v1).containsKey(v2)) {
+                int c = graph.get(v1).get(v2);
+                graph.get(v1).put(v2, c + 1);
+            } else {
+                graph.get(v1).put(v2, 1);
+            }
         } else {
-            Set<Integer> set = new HashSet<>();
-            set.add(v2);
-            graph.put(v1, set);
+            Map<Integer, Integer> map = new HashMap<>();
+            map.put(v2, 1);
+            graph.put(v1, map);
         }
     }
 

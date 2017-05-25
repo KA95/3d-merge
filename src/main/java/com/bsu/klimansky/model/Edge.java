@@ -11,4 +11,22 @@ public class Edge {
         this.p1 = p1;
         this.p2 = p2;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Edge edge = (Edge) o;
+
+        if (p1 != edge.p1) return false;
+        return p2 == edge.p2;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = p1;
+        result = 31 * result + p2;
+        return result;
+    }
 }

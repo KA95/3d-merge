@@ -89,14 +89,17 @@ public class DrawingUtils {
     }
 
     public static void drawPointsOfMesh(List<Integer> points, TriangulatedMesh mesh, TestAnalysis ta) {
-        Polygon polygon = new Polygon();
-        polygon.setWireframeColor(Color.BLACK);
+        List<Coord3d> newPoints = new ArrayList<>();
 
         for (Integer i : points) {
             Point3D p = mesh.points.get(i);
-            polygon.add(new Point(new Coord3d(p.getX(), p.getZ(), p.getY())));
-            ta.draw(polygon);
+            newPoints.add(new Coord3d(p.getX(), p.getZ(), p.getY()));
         }
+
+        Coord3d[] coord3ds = new Coord3d[newPoints.size()];
+        newPoints.toArray(coord3ds);
+        Scatter pointsScatter = new Scatter(coord3ds, Color.BLUE, 4f);
+        ta.draw(pointsScatter);
     }
 
     public static void drawTriangle(Triangle tr, TriangulatedMesh mesh, TestAnalysis ta) {

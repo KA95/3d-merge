@@ -1,13 +1,14 @@
 package com.bsu.klimansky.util;
 
 import com.bsu.klimansky.model.AdvancedTriangulatedMesh;
+import com.bsu.klimansky.model.Edge;
 import com.bsu.klimansky.model.Triangle;
 import com.bsu.klimansky.model.TriangulatedMesh;
 import javafx.geometry.Point3D;
 
 import java.util.*;
 
-import static com.bsu.klimansky.util.GraphUtil.buildGraphByMesh;
+import static com.bsu.klimansky.util.GraphUtil.calculateBoundEdges;
 
 /**
  * Created by Anton Klimansky on 09.05.2017.
@@ -38,12 +39,55 @@ public class TriangulatedMeshUtil {
     }
 
     public static List<Integer> boundForMesh(TriangulatedMesh mesh, boolean upper) {
-        List<Point3D> points = mesh.points;
-
         // build graph
-        Map<Integer, Set<Integer>> graph = buildGraphByMesh(mesh);
-        // select first point
+        //v1->v2->counter of usages in triangulation
+        Map<Integer, Map<Integer, Integer>> graph = calculateBoundEdges(mesh);
+        Set<Integer> boundSet = new HashSet<>();
+        Set<Edge> boundEdges = new HashSet<>();
+
+        List<Integer> bound = new ArrayList<>();
+        for (Map.Entry<Integer, Map<Integer, Integer>> e1 : graph.entrySet()) {
+            for (Map.Entry<Integer, Integer> e2 : e1.getValue().entrySet()) {
+                if (e2.getValue() == 1 && e1.getKey() < e2.getKey()) {
+                    boundEdges.add(new Edge(e1.getKey(), e2.getKey()));
+                    boundEdges.add(new Edge(e2.getKey(), e1.getKey()));
+                    if (!boundSet.contains(e1.getKey())) boundSet.add(e1.getKey());
+                    if (!boundSet.contains(e2.getKey())) boundSet.add(e2.getKey());
+                }
+            }
+        }
+
+        //get first point
+        int first = getFirstPoint(mesh, upper);
+        boolean[] used = new boolean[mesh.points.size()];
+        for (int i = 0; i < mesh.points.size(); i++)
+            used[i] = false;
+        int cur = first;
+        boolean hasMore = true;
+        while (hasMore) {
+            hasMore = false;
+            bound.add(cur);
+            used[cur] = true;
+            Set<Map.Entry<Integer, Integer>> edges = graph.containsKey(cur) ? graph.get(cur).entrySet() : null;
+            if (edges != null) {
+                for (Map.Entry<Integer, Integer> m : edges) {
+                    if (boundSet.contains(m.getKey()) && !used[m.getKey()]) {
+                        if (boundEdges.contains(new Edge(cur, m.getKey())) || boundEdges.contains(new Edge(m.getKey(), cur))) {
+                            cur = m.getKey();
+                            hasMore = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        bound.add(first);
+        return bound;
+    }
+
+    private static int getFirstPoint(TriangulatedMesh mesh, boolean upper) {
         int pFirstIndex = 0;
+        List<Point3D> points = mesh.points;
         Point3D pFirst = points.get(0);
 
         for (int i = 1; i < points.size(); i++) {
@@ -60,7 +104,7 @@ public class TriangulatedMeshUtil {
                 }
             }
         }
-        return buildBound(graph, points, pFirstIndex, upper);
+        return pFirstIndex;
     }
 
     public static TriangulatedMesh join(AdvancedTriangulatedMesh lower, AdvancedTriangulatedMesh upper) {
@@ -99,7 +143,7 @@ public class TriangulatedMeshUtil {
             }
         }
         //hack!!
-//        Collections.reverse(lower.bound);
+        Collections.reverse(lower.bound);
         //shift to them
         int lStart = lower.bound.indexOf(bestP1);
         int uStart = upper.bound.indexOf(bestP2);
@@ -196,47 +240,6 @@ public class TriangulatedMeshUtil {
         return result;
     }
 
-    private static List<Integer> buildBound(Map<Integer, Set<Integer>> graph, List<Point3D> points, int first, boolean upper) {
-        List<Integer> result = new ArrayList<>();
-        int current = first;
-        int prev = -1;
-        boolean[] used = new boolean[points.size()];
-        for (int i = 0; i < points.size(); i++)
-            used[i] = false;
-
-        do {
-            used[current] = true;
-            result.add(current);
-            int next = -1;
-            Set<Integer> set = graph.get(current);
-            Point3D pCur = points.get(current);
-            Point3D pNext = null;
-            for (int v : set) {
-                if (v == first && first != prev) {
-                    result.add(first);
-                    break;
-                }
-                if (used[v]) continue;
-                if (set.size() != 2 && result.size() > 2 && graph.get(v).contains(prev))
-                    continue;
-                if (next == -1) {
-                    next = v;
-                    pNext = points.get(v);
-                    continue;
-                }
-                Point3D p = points.get(v);
-                if (isBetter(p, pNext, pCur, upper)) {
-                    next = v;
-                    pNext = p;
-                }
-            }
-            prev = current;
-            current = next;
-        } while (current != -1);
-
-        return result;
-    }
-
     private static int take(List<Integer> list, int index) {
         if (index == list.size()) {
             return list.get(0);
@@ -244,20 +247,4 @@ public class TriangulatedMeshUtil {
             return list.get(index);
         }
     }
-
-    private static boolean isBetter(Point3D p, Point3D best, Point3D current, boolean upper) {
-        Point3D dp = new Point3D(p.getX() - current.getX(), p.getY() - current.getY(), p.getZ() - current.getZ());
-        Point3D dbest = new Point3D(best.getX() - current.getX(), best.getY() - current.getY(), best.getZ() - current.getZ());
-        if (upper) {
-            return goalFunction(dp) < goalFunction(dbest);
-        } else {
-            return goalFunction(dp) > goalFunction(dbest);
-        }
-    }
-
-    private static double goalFunction(Point3D point) {
-//        return point.getY() / Math.sqrt(point.getX() * point.getX() + point.getZ() * point.getZ());
-        return point.getY();
-    }
-
 }

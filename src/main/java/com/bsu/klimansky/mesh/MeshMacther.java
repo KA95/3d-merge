@@ -14,6 +14,8 @@ import org.jzy3d.colors.Color;
 import java.util.List;
 
 import static com.bsu.klimansky.graphics.DrawingUtils.*;
+import static com.bsu.klimansky.util.TriangulatedMeshUtil.join;
+import static com.bsu.klimansky.util.TriangulatedMeshUtil.visualizeBound;
 
 /**
  * Created by Anton Klimansky on 5/22/2017.
@@ -76,11 +78,11 @@ public class MeshMacther {
 
         TestAnalysis ta = new TestAnalysis();
         AnalysisLauncher.open(ta);
-//        ta.draw(createTriangle(Color.BLACK, new Point3D(0,0,0), new Point3D(0,0,0), new Point3D(0,0.0,0), Color.BLACK));
+        ta.draw(createTriangle(Color.BLACK, new Point3D(0,0,0), new Point3D(0,0,0), new Point3D(0,0.0,0), Color.BLACK));
 
 //        drawTimeSeries(aUpper.cuts.get(cutU), ta);
 //        Thread.sleep(2000);
-        drawTimeSeries(aLower.cuts.get(cutL), ta);
+//        drawTimeSeries(aLower.cuts.get(cutL), ta);
 //        Thread.sleep(2000);
 
         MeshCut upperCut = aUpper.cuts.get(cutU);
@@ -108,23 +110,27 @@ public class MeshMacther {
 //        TestAnalysis ta1 = new TestAnalysis();
 //        AnalysisLauncher.open(ta1);
 //
-        drawTimeSeries(aLower.cuts.get(cutL), ta);
-        drawMesh(rLower, ta, 0);
-        Thread.sleep(2000);
-        drawMesh(rUpper, ta, 0);
+//        drawTimeSeries(aLower.cuts.get(cutL), ta);
+//        drawMesh(rLower, ta, 0);
+//        Thread.sleep(2000);
+//        drawMesh(rUpper, ta, 0);
 
         //todo: join after fix
 
-//        AdvancedTriangulatedMesh lower1 = new AdvancedTriangulatedMesh(rLower, false);
-//        AdvancedTriangulatedMesh upper1 = new AdvancedTriangulatedMesh(rUpper, true);
+        AdvancedTriangulatedMesh lower1 = new AdvancedTriangulatedMesh(rLower, false);
+        AdvancedTriangulatedMesh upper1 = new AdvancedTriangulatedMesh(rUpper, true);
+//
+        TriangulatedMesh lbound = visualizeBound(lower1, lower1.bound, false);
+        TriangulatedMesh ubound = visualizeBound(upper1, upper1.bound, true);
 
-//        TriangulatedMesh lbound = visualizeBound(lower1, lower1.bound, false);
-//        TriangulatedMesh ubound = visualizeBound(upper1, upper1.bound, true);
 
-
-//        TriangulatedMesh result = join(lower1, upper1);
+        TriangulatedMesh result = join(lower1, upper1);
 //        Writer writer = new Writer();
 //        writer.write(result, PATH_TO_OUT);
+
+        drawMesh(result, ta, 0);
+//        Thread.sleep(2000);
+//        drawMesh(ubound, ta, 0);
 
         System.out.println("Done");
 

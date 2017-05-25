@@ -41,7 +41,6 @@ public class AdvancedTriangulatedMesh extends TriangulatedMesh {
         triangles = mesh.triangles;
         points = mesh.points;
         bound = boundForMesh(mesh, upper);
-        bound.remove(bound.size() - 1);
     }
 
     public void recalculate() throws Exception {
