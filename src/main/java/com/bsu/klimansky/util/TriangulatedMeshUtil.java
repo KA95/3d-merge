@@ -58,7 +58,7 @@ public class TriangulatedMeshUtil {
         }
 
         //get first point
-        int first = getFirstPoint(mesh, upper);
+        int first = getFirstPoint(mesh, upper, graph);
         boolean[] used = new boolean[mesh.points.size()];
         for (int i = 0; i < mesh.points.size(); i++)
             used[i] = false;
@@ -85,13 +85,19 @@ public class TriangulatedMeshUtil {
         return bound;
     }
 
-    private static int getFirstPoint(TriangulatedMesh mesh, boolean upper) {
-        int pFirstIndex = 0;
+    private static int getFirstPoint(TriangulatedMesh mesh, boolean upper, Map<Integer, Map<Integer, Integer>> graph) {
+        int pFirstIndex = -1;
+        Point3D pFirst = null;
         List<Point3D> points = mesh.points;
-        Point3D pFirst = points.get(0);
 
         for (int i = 1; i < points.size(); i++) {
             Point3D point = points.get(i);
+            if (graph.get(i) == null || graph.get(i).size() == 0) continue;
+            if (pFirstIndex == -1) {
+                pFirstIndex = i;
+                pFirst = points.get(i);
+                continue;
+            }
             if (upper) {
                 if (point.getY() < pFirst.getY()) {
                     pFirst = point;
@@ -143,7 +149,9 @@ public class TriangulatedMeshUtil {
             }
         }
         //hack!!
-        Collections.reverse(lower.bound);
+        if (Constants.HACK) {
+            Collections.reverse(lower.bound);
+        }
         //shift to them
         int lStart = lower.bound.indexOf(bestP1);
         int uStart = upper.bound.indexOf(bestP2);
@@ -193,7 +201,6 @@ public class TriangulatedMeshUtil {
 
     public static TriangulatedMesh getPartialMesh(TriangulatedMesh source, double yThreshold, boolean above) {
         Map<Integer, Integer> allowedVertices = new HashMap<>();
-
         List<Point3D> points = source.points;
         List<Point3D> newPoints = new ArrayList<>();
         int counter = 0;
@@ -213,7 +220,6 @@ public class TriangulatedMeshUtil {
                 }
             }
         }
-
         List<Triangle> triangles = source.triangles;
         List<Triangle> newTriangles = new ArrayList<>();
         for (Triangle t : triangles) {

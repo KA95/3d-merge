@@ -22,43 +22,43 @@ import static com.bsu.klimansky.util.TriangulatedMeshUtil.visualizeBound;
  */
 public class MeshMacther {
 
+    private static long timerStart;
+    private static String timerName;
+    private static long total = 0;
 
-    private static final String PATH_TO_LOWER_PART = Constants.DIRECTORY + "bunny10k_lower-complex.json";
-    private static final String PATH_TO_UPPER_PART = Constants.DIRECTORY + "bunny10k_upper-complex.json";
-    private static final String PATH_TO_LOWER_OUT = Constants.DIRECTORY + "bunny10k_lower-matched.ply";
-    private static final String PATH_TO_UPPER_OUT = Constants.DIRECTORY + "bunny10k_upper-matched.ply";
+
+//    private static final String PATH_TO_LOWER_PART = Constants.DIRECTORY + "bunny10k_lower-complex.json";
+//    private static final String PATH_TO_UPPER_PART = Constants.DIRECTORY + "bunny10k_upper-complex.json";
+        private static final String PATH_TO_LOWER_PART = Constants.DIRECTORY + "Laurana50k_lower.json";
+    private static final String PATH_TO_UPPER_PART = Constants.DIRECTORY + "Laurana50k_upper.json";
+    //    private static final String PATH_TO_LOWER_OUT = Constants.DIRECTORY + "bunny10k_lower-matched.ply";
+//    private static final String PATH_TO_UPPER_OUT = Constants.DIRECTORY + "bunny10k_upper-matched.ply";
+//    private static final String PATH_TO_OUT = Constants.DIRECTORY + "bunny10k%d-%d_joined.ply";
+    private static final String PATH_TO_OUT = Constants.DIRECTORY + "Laurana50k%d-%d_joined.ply";
+
 
     public static void main(String[] args) throws Exception {
         Reader reader = new Reader();
 
-        //basic mesh available to vizalization
+        start("Reading");
         TriangulatedMesh lower = reader.readMeshFromJson(PATH_TO_LOWER_PART);
         TriangulatedMesh upper = reader.readMeshFromJson(PATH_TO_UPPER_PART);
-
-
+        end();
+//---------------------------------------------------------------------
+        start("Initialize meshes");
         AdvancedTriangulatedMesh aUpper = new AdvancedTriangulatedMesh(upper, true);
         aUpper.recalculate();
         AdvancedTriangulatedMesh aLower = new AdvancedTriangulatedMesh(lower, false);
         aLower.recalculate();
-
-        System.out.println("Calculating distances");
+        end();
+//---------------------------------------------------------------------
+        start("Matching");
         Solution[][] solutions = new Solution[Constants.FREQUENCY + 1][Constants.FREQUENCY + 1];
         for (int i = 0; i <= Constants.FREQUENCY; i++) {
             for (int j = 0; j <= Constants.FREQUENCY; j++) {
                 solutions[i][j] = match(aLower.cuts.get(i), aUpper.cuts.get(j));
             }
         }
-
-//        TestAnalysis ta = new TestAnalysis();
-//        AnalysisLauncher.open(ta);
-
-//        for(MeshCut m : aUpper.cuts) {
-//            drawEdgesUsedInCut(aUpper, m, ta);
-//            drawCutPoints(m, ta);
-//            drawCutEdges(m, ta);
-//            drawTimeSeries(m, ta);
-//        }
-
         Solution best = solutions[0][0];
         int cutL = 0;
         int cutU = 0;
@@ -71,67 +71,35 @@ public class MeshMacther {
                 }
             }
         }
-
-        System.out.println(best.distance);
-        System.out.println(best.angle);
-        //------------------------------------------------------------------------------------
-
-        TestAnalysis ta = new TestAnalysis();
-        AnalysisLauncher.open(ta);
-        ta.draw(createTriangle(Color.BLACK, new Point3D(0,0,0), new Point3D(0,0,0), new Point3D(0,0.0,0), Color.BLACK));
-
-//        drawTimeSeries(aUpper.cuts.get(cutU), ta);
-//        Thread.sleep(2000);
-//        drawTimeSeries(aLower.cuts.get(cutL), ta);
-//        Thread.sleep(2000);
-
+        end();
+//---------------------------------------------------------------------
+        start("Other");
         MeshCut upperCut = aUpper.cuts.get(cutU);
         MeshCut lowerCut = aLower.cuts.get(cutL);
-//
+
         Point3D translation = lowerCut.center.subtract(upperCut.center);
         aUpper.move(translation);
         aUpper.rotate(-best.angle, lowerCut.center);
-
-//        drawMesh(aLower, ta, 0);
-//        Thread.sleep(5000);
-//        drawMesh(aUpper, ta, 0);
 
         double separatorY = lowerCut.center.getY();
 
         TriangulatedMesh rLower = aLower.getTruncated(separatorY, false);
         TriangulatedMesh rUpper = aUpper.getTruncated(separatorY, true);
-//
-//        Writer writer = new Writer();
-//        writer.write(rLower, PATH_TO_LOWER_OUT);
-//        writer.write(rUpper, PATH_TO_UPPER_OUT);
-
-
-
-//        TestAnalysis ta1 = new TestAnalysis();
-//        AnalysisLauncher.open(ta1);
-//
-//        drawTimeSeries(aLower.cuts.get(cutL), ta);
-//        drawMesh(rLower, ta, 0);
-//        Thread.sleep(2000);
-//        drawMesh(rUpper, ta, 0);
-
-        //todo: join after fix
 
         AdvancedTriangulatedMesh lower1 = new AdvancedTriangulatedMesh(rLower, false);
         AdvancedTriangulatedMesh upper1 = new AdvancedTriangulatedMesh(rUpper, true);
-//
-        TriangulatedMesh lbound = visualizeBound(lower1, lower1.bound, false);
-        TriangulatedMesh ubound = visualizeBound(upper1, upper1.bound, true);
-
 
         TriangulatedMesh result = join(lower1, upper1);
-//        Writer writer = new Writer();
-//        writer.write(result, PATH_TO_OUT);
+        end();
+//---------------------------------------------------------------------
+        Writer writer = new Writer();
+        writer.write(result, String.format(PATH_TO_OUT, Constants.FREQUENCY, Constants.SERIES_LENGTH));
 
-        drawMesh(result, ta, 0);
-//        Thread.sleep(2000);
-//        drawMesh(ubound, ta, 0);
+        System.out.println("angle error: " + Math.abs((best.angle - Constants.ORIGINAL_ANGLE) / Constants.ORIGINAL_ANGLE * 100));
+        System.out.println("height error: " + Math.abs((result.calculateHeight() - Constants.LAURANA_HEIGHT) / Constants.LAURANA_HEIGHT * 100));
 
+        //best for calculation;
+        System.out.println("Total : " + total + " ms");
         System.out.println("Done");
 
     }
@@ -176,6 +144,19 @@ public class MeshMacther {
             angle = bestAngle;
             distance = bestDistance;
         }
+    }
+
+    public static void start(String name) {
+        timerName = name;
+        timerStart = System.currentTimeMillis();
+    }
+
+    public static void end() {
+        long end = System.currentTimeMillis();
+        System.out.println(timerName + " : " + (end - timerStart) + " ms");
+        total += end - timerStart;
+        timerStart = 0;
+        timerName = "";
     }
 
 }

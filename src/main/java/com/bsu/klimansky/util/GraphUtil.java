@@ -22,12 +22,10 @@ class GraphUtil {
         }
         return graph;
     }
-
     private static void addEdge(Map<Integer, Map<Integer, Integer>> graph, int v1, int v2) {
         addEdgeInternal(graph, v1, v2);
         addEdgeInternal(graph, v2, v1);
     }
-
     private static void addEdgeInternal(Map<Integer, Map<Integer, Integer>> graph, int v1, int v2) {
         if (graph.containsKey(v1)) {
             if (graph.get(v1).containsKey(v2)) {

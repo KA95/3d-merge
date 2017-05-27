@@ -60,9 +60,11 @@ public class DrawingUtils {
     public static void drawTimeSeries(MeshCut cut, TestAnalysis ta) {
         List<Coord3d> newPoints = new ArrayList<>();
         double step = Math.PI * 2 / Constants.SERIES_LENGTH;
+        double maxDist = 0;
         for (int i = 0; i < cut.series.size(); i++) {
             List<Double> l = cut.series.get(i);
             for (Double d : l) {
+                maxDist = Math.max(maxDist, d);
                 double x = cut.center.getX() + d * Math.cos(step * i);
                 double y = cut.center.getZ() + d * Math.sin(step * i);
 
@@ -78,6 +80,13 @@ public class DrawingUtils {
         newPoints.toArray(coord3ds);
         Scatter pointsScatter = new Scatter(coord3ds, Color.BLUE, 3f);
         ta.draw(pointsScatter);
+        for (int i = 0; i < cut.series.size();i++) {
+
+            double x = cut.center.getX() + maxDist * Math.cos(step * i);
+            double y = cut.center.getZ() + maxDist * Math.sin(step * i);
+            ta.draw(createTriangle(Color.GRAY, cut.center, cut.center, new Point3D(x, cut.y, y), Color.GRAY));
+
+        }
     }
 
     public static void drawCutEdges(MeshCut cut, TestAnalysis ta) {

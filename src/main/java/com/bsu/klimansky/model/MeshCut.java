@@ -50,12 +50,10 @@ public class MeshCut {
                         cutEdges.add(new Edge(p, next));
                         Point3D p1 = points.get(p);
                         Point3D p2 = points.get(next);
-
                         double x = p1.getX() * (p2.getY() - y) + p2.getX() * (y - p1.getY());
-                        x = x / (p2.getY() - p1.getY());//todo: what if equals?
+                        x = x / (p2.getY() - p1.getY());
                         double z = p1.getZ() * (p2.getY() - y) + p2.getZ() * (y - p1.getY());
-                        z = z / (p2.getY() - p1.getY());//todo: what if equals?
-
+                        z = z / (p2.getY() - p1.getY());
                         cutPoints.add(new Point3D(x, y, z));
                     }
                 }
@@ -107,83 +105,44 @@ public class MeshCut {
     }
 
     private void buildTimeSeries() throws Exception {
-
-//        TestAnalysis ta = new TestAnalysis();
-//        AnalysisLauncher.open(ta);
-        //should be optimized
         series = new ArrayList<>();
         double step = Math.PI * 2 / Constants.SERIES_LENGTH;
         for (int i = 0; i < Constants.SERIES_LENGTH; i++) {
-
             series.add(new ArrayList<>());
             double angle = step * i;
-            //-----------------
-//            Point3D ap = new Point3D(center.getX() + Math.cos(angle) * 0.1, center.getY(), center.getZ() + Math.sin(angle) * 0.1);
-//            Polygon anglep = DrawingUtils.createTriangle(Color.BLUE, center, ap, ap);
-//            ta.draw(anglep);
-//            Thread.sleep(200);
-            //-----------------
             for (Edge e : edges) {
                 Point3D p13d = cutPoints.get(e.p1);
                 Point3D p23d = cutPoints.get(e.p2);
-
                 Point2D p1 = new Point2D(p13d.getX() - center.getX(), p13d.getZ() - center.getZ());
                 Point2D p2 = new Point2D(p23d.getX() - center.getX(), p23d.getZ() - center.getZ());
-
-
-                Point2D O = new Point2D(0, 0);
-
-                //conversion to polar
-                double d1 = O.distance(p1);
                 double a1 = getAngle(p1);
-
-                double d2 = O.distance(p2);
                 double a2 = getAngle(p2);
-
                 if (a1 > a2) {
                     double buffer = a1;
                     a1 = a2;
                     a2 = buffer;
                 }
-
                 if (a1 < 0.5 * Math.PI && a2 > 1.5 * Math.PI) {
                     a2 -= 2 * Math.PI;
                     double buffer = a1;
                     a1 = a2;
                     a2 = buffer;
                 }
-
                 if (angle < a1 || angle > a2) continue;
 
-                //visualize
-//                Polygon ep = DrawingUtils.createTriangle(Color.RED, p13d, p23d, p23d);
-//                ta.draw(ep);
-//                Thread.sleep(100);
-
-                //find normal point
                 double A = p1.getY() - p2.getY();
                 double B = p2.getX() - p1.getX();
                 double C = p1.getX() * p2.getY() - p2.getX() * p1.getY();
-
                 if (C > 0) {
                     A = -A;
                     B = -B;
                     C = -C;
                 }
-
-                //(A,B) - normal vector to line
                 double an = getAngle(new Point2D(A, B));
                 double dn = -C / Math.sqrt(A * A + B * B);
-
                 double d = dn / Math.cos(angle - an);
-
-//                Point3D p = new Point3D(center.getX() + d * Math.cos(angle), center.getY(), center.getZ() + d * Math.sin(angle));
-//                DrawingUtils.drawPoint(p, ta, Color.GRAY);
-//                Thread.sleep(300);
                 series.get(i).add(d);
-
             }
-
         }
     }
 
